@@ -27,7 +27,8 @@ export default class QuillOEmbedModule {
         .then(response => response.json())
         .then(json => this.insertEmbedFromJson(json, index))
         .then(removeOriginal => {
-          if (removeOriginal) this.quill.updateContents(new Delta().delete(node.data.length))
+          if (removeOriginal) 
+            this.quill.deleteText(index + 1, node.data.length);
         })
     }
 
@@ -52,7 +53,7 @@ export default class QuillOEmbedModule {
       case 'rich':
         const data: OEmbedData = {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width};
         this.quill.insertEmbed(index, 'oembed-wrapper', data, 'api');
-        return false
+        return true
       default:
         return false
     }
