@@ -16,8 +16,9 @@ export default class QuillOEmbedModule {
     if (delta.ops && QuillOEmbedModule.isValidUrl(node.data) && node.data.toLowerCase().indexOf('oembed') > -1) {
       const index = this.quill.getLength() - node.data.length
       const formatParam = '&format=json'
+      const sizeParam = '&maxwidth=500&maxheight=500';
 
-      fetch(node.data + formatParam, {
+      fetch(node.data + formatParam + sizeParam, {
         headers: {
           Accept: 'application/json',
         },
@@ -48,7 +49,8 @@ export default class QuillOEmbedModule {
         return true
       case 'video':
       case 'rich':
-        this.quill.insertEmbed(index, 'oembed-wrapper', oEmbed.html, 'api');
+        const data: OEmbedData = {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width};
+        this.quill.insertEmbed(index, 'oembed-wrapper', data, 'api');
         return false
       default:
         return false
@@ -56,11 +58,21 @@ export default class QuillOEmbedModule {
   }
 }
 
+interface OEmbedData {
+  html: string,
+  width: number,
+  height: number,
+}
+
 class OEmbedWrapper extends BlockEmbed {
-  static create(value: string) {
-    const node = super.create(value);
+  static create(value: OEmbedData) {
+    const {html, width, height} = value;
     
-    node.setAttribute('srcdoc', value);
+    const node = super.create(html);
+    
+    node.setAttribute('srcdoc', html);
+    node.setAttribute('width', width);
+    node.setAttribute('height', height);
 
     node.setAttribute('frameborder', '0');
     node.setAttribute('allowfullscreen', true);
