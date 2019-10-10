@@ -1,8 +1,7 @@
 import { Quill } from 'react-quill'
 import { DeltaStatic } from 'quill'
 
-const Delta = Quill.import('delta');
-const BlockEmbed = Quill.import('blots/block/embed');
+const BlockEmbed = Quill.import('blots/block/embed')
 
 export default class QuillOEmbedModule {
   private quill: Quill
@@ -14,10 +13,10 @@ export default class QuillOEmbedModule {
 
   private pasteHandler(node: any, delta: DeltaStatic): DeltaStatic {
     if (delta.ops && QuillOEmbedModule.isValidUrl(node.data) && node.data.toLowerCase().indexOf('oembed') > -1) {
-      const index = this.quill.getSelection(true).index;
+      const index = this.quill.getSelection(true).index
       
       const formatParam = '&format=json'
-      const sizeParam = '&maxwidth=500&maxheight=500';
+      const sizeParam = '&maxwidth=500&maxheight=500'
 
       fetch(node.data + formatParam + sizeParam, {
         headers: {
@@ -28,7 +27,15 @@ export default class QuillOEmbedModule {
         .then(json => this.insertEmbedFromJson(json, index))
         .then(removeOriginal => {
           if (removeOriginal) 
-            this.quill.deleteText(index + 1, node.data.length);
+            this.quill.deleteText(index + 1, node.data.length)
+        })
+        .catch(() => {
+          const targetUrl = new URL(node.data).searchParams.get('url');
+
+          if (targetUrl && QuillOEmbedModule.isValidUrl(targetUrl)) {
+            this.quill.deleteText(index, node.data.length)
+            this.quill.insertText(index, targetUrl)
+          }
         })
     }
 
@@ -51,8 +58,8 @@ export default class QuillOEmbedModule {
         return true
       case 'video':
       case 'rich':
-        const data: OEmbedData = {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width};
-        this.quill.insertEmbed(index, 'oembed-wrapper', data, 'api');
+        const data: OEmbedData = {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width}
+        this.quill.insertEmbed(index, 'oembed-wrapper', data, 'api')
         return true
       default:
         return false
@@ -66,30 +73,35 @@ interface OEmbedData {
   height: number,
 }
 
+/**
+ * Extension of the BlockEmbed class to allow Quill-sided creation of an iframe with the content we want.
+ * 
+ * Also allows for width and height of the resulting iframe to be set.
+ */
 class OEmbedWrapper extends BlockEmbed {
   static create(value: OEmbedData) {
-    const {html, width, height} = value;
+    const {html, width, height} = value
     
-    const node = super.create(html);
+    const node = super.create(html)
     
-    node.setAttribute('srcdoc', html);
-    node.setAttribute('width', width);
-    node.setAttribute('height', height);
+    node.setAttribute('srcdoc', html)
+    node.setAttribute('width', width)
+    node.setAttribute('height', height)
 
-    node.setAttribute('frameborder', '0');
-    node.setAttribute('allowfullscreen', true);
-    return node;
+    node.setAttribute('frameborder', '0')
+    node.setAttribute('allowfullscreen', true)
+    return node
   }
 
   static value(node: any) {
-    return node.getAttribute('srcdoc');
+    return node.getAttribute('srcdoc')
   }
 }
 
 //Name for Quill to find this embed under
-OEmbedWrapper.blotName = 'oembed-wrapper';
+OEmbedWrapper.blotName = 'oembed-wrapper'
 
 //Tag to create by Quill
-OEmbedWrapper.tagName = 'iframe';
+OEmbedWrapper.tagName = 'iframe'
 
-Quill.register(OEmbedWrapper, true);
+Quill.register(OEmbedWrapper, true)
