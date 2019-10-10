@@ -14,7 +14,8 @@ export default class QuillOEmbedModule {
 
   private pasteHandler(node: any, delta: DeltaStatic): DeltaStatic {
     if (delta.ops && QuillOEmbedModule.isValidUrl(node.data) && node.data.toLowerCase().indexOf('oembed') > -1) {
-      const index = this.quill.getLength() - node.data.length
+      const index = this.quill.getSelection(true).index;
+      
       const formatParam = '&format=json'
       const sizeParam = '&maxwidth=500&maxheight=500';
 
