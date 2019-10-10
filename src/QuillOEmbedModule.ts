@@ -1,5 +1,8 @@
 import { Quill } from 'react-quill'
-import { Delta, DeltaStatic } from 'quill'
+import { DeltaStatic } from 'quill'
+
+const Delta = Quill.import('delta');
+const BlockEmbed = Quill.import('blots/block/embed');
 
 export default class QuillOEmbedModule {
   private quill: Quill
@@ -45,10 +48,34 @@ export default class QuillOEmbedModule {
         return true
       case 'video':
       case 'rich':
-        this.quill.clipboard.dangerouslyPasteHTML(oEmbed.html, 'api')
-        return true
+        this.quill.insertEmbed(index, 'oembed-wrapper', oEmbed.html, 'api');
+        return false
       default:
         return false
     }
   }
 }
+
+class OEmbedWrapper extends BlockEmbed {
+  static create(value: string) {
+    const node = super.create(value);
+    
+    node.setAttribute('srcdoc', value);
+
+    node.setAttribute('frameborder', '0');
+    node.setAttribute('allowfullscreen', true);
+    return node;
+  }
+
+  static value(node: any) {
+    return node.getAttribute('srcdoc');
+  }
+}
+
+//Name for Quill to find this embed under
+OEmbedWrapper.blotName = 'oembed-wrapper';
+
+//Tag to create by Quill
+OEmbedWrapper.tagName = 'iframe';
+
+Quill.register(OEmbedWrapper, true);
