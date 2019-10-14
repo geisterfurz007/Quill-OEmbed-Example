@@ -57,13 +57,26 @@ export default class QuillOEmbedModule {
         this.quill.insertEmbed(index, 'image', oEmbed.url, 'api')
         return true
       case 'video':
-      case 'rich':
-        const data: OEmbedData = {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width}
+      case 'rich': {
+        const data: OEmbedData = this.getOEmbedData(oEmbed)
         this.quill.insertEmbed(index, 'oembed-wrapper', data, 'api')
         return true
+      }
       default:
         return false
     }
+  }
+
+  private getOEmbedData(oEmbed: any): OEmbedData {
+    if (oEmbed.width || oEmbed.height) {
+      return {html: oEmbed.html, height: oEmbed.height, width: oEmbed.width}
+    }
+
+    if (oEmbed.thumbnail_width || oEmbed.thumbnail_height) {
+      return {html: oEmbed.html, height: oEmbed.thumbnail_height, width: oEmbed.thumbnail_width}
+    }
+
+    return {html: oEmbed.html, height: 500, width: 500}
   }
 }
 
